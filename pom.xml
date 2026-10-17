@@ -12,8 +12,10 @@
     </parent>
 
     <!--
-      Aggregator for the calculator MCP server and client. The server is listed first so that
-      `./mvnw verify` packages its jar before the client's end-to-end test launches it.
+      Aggregator for the calculator MCP server and client, the ScientificCalculatorMCP project, and
+      the router client that talks to both servers. Servers come before the clients that test
+      against them, so `./mvnw verify` packages each server jar before an end-to-end test launches it.
+      ScientificCalculatorMCP still builds on its own with ./mvnw in its directory.
     -->
     <groupId>com.example</groupId>
     <artifactId>simple-mcp-calculator</artifactId>
@@ -25,6 +27,8 @@
     <modules>
         <module>calculator-mcp-server</module>
         <module>calculator-mcp-client</module>
+        <module>ScientificCalculatorMCP</module>
+        <module>calculator-router-client</module>
     </modules>
 
     <properties>

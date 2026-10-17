@@ -16,7 +16,8 @@ calculator-mcp-client ──(MCP over stdin/stdout)──> calculator-mcp-server
 |--------------------------|-----------------------------------------------------------------------------|
 | `calculator-mcp-server/` | Spring Boot MCP server; `CalculatorTools` holds the nine `@McpTool` methods |
 | `calculator-mcp-client/` | Spring Boot MCP client; starts the server jar and calls its tools from the command line |
-| [`ScientificCalculatorMCP/`](ScientificCalculatorMCP/README.md) | Separate server + client pair for square roots and logarithms (`sqrt`, `ln`, `log10`, `log`), built on its own with `./mvnw` in that directory |
+| [`ScientificCalculatorMCP/`](ScientificCalculatorMCP/README.md) | Separate server + client pair for square roots and logarithms (`sqrt`, `ln`, `log10`, `log`); built by the root `./mvnw`, or on its own with `./mvnw` in that directory |
+| `calculator-router-client/` | Spring Boot MCP client connected to **both** servers; sends each operation to the server that offers it (see [Router client](#router-client)) |
 
 Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.1 (MCP Java SDK 2.0).
 
@@ -53,10 +54,13 @@ All commands below are run from the repository root.
 ./mvnw package
 ```
 
-This builds both executable jars (and runs the tests):
+This builds every executable jar (and runs the tests):
 
 - `calculator-mcp-server/target/calculator-mcp-server.jar`
 - `calculator-mcp-client/target/calculator-mcp-client.jar`
+- `ScientificCalculatorMCP/scientific-calculator-mcp-server/target/scientific-calculator-mcp-server.jar`
+- `ScientificCalculatorMCP/scientific-calculator-mcp-client/target/scientific-calculator-mcp-client.jar`
+- `calculator-router-client/target/calculator-router-client.jar`
 
 ## 2. Start the server
 
@@ -133,6 +137,45 @@ relative to the current directory. To run it from somewhere else, pass the path:
 java -jar /path/to/calculator-mcp-client.jar --calculator.server.jar=/path/to/calculator-mcp-server.jar add 7 5
 ```
 
+## Router client
+
+`calculator-router-client` launches **both** servers (two stdio connections in its
+`application.yml`) and calls whichever one offers the requested operation:
+
+```
+                          ┌──(stdio)──> calculator-mcp-server             add, subtract, ..., parity
+calculator-router-client ─┤
+                          └──(stdio)──> scientific-calculator-mcp-server  sqrt, ln, log10, log
+```
+
+At startup `CalculatorRouter` asks each server for its tools (`tools/list`) and builds a routing
+table from tool name to server, along with each tool's parameter names in order. Nothing about
+the tools is hard-coded, so a tool added to either server is routable with no client change. If
+both servers ever offer the same tool name, the client refuses to start rather than guess.
+
+```bash
+# List every operation with its parameters and server, then run a demo against both servers
+java -jar calculator-router-client/target/calculator-router-client.jar
+
+# <operation> <operand>...  (operands fill the tool's parameters in order)
+java -jar calculator-router-client/target/calculator-router-client.jar add 7 5        # 12.0  (calculator-mcp-server)
+java -jar calculator-router-client/target/calculator-router-client.jar isPrime 97     # true  (calculator-mcp-server)
+java -jar calculator-router-client/target/calculator-router-client.jar log 1000 10    # 3.0   (scientific-calculator-mcp-server)
+
+# Errors print "Error: ..." and exit with code 1
+java -jar calculator-router-client/target/calculator-router-client.jar log 8          # Error: log takes 2 operand(s): x, base
+java -jar calculator-router-client/target/calculator-router-client.jar cube_root 8    # Error: Unknown operation: cube_root
+java -jar calculator-router-client/target/calculator-router-client.jar divide 1 0     # Error: Division by zero
+```
+
+Both server jars are found relative to the repository root. From elsewhere, pass both paths:
+
+```bash
+java -jar /path/to/calculator-router-client.jar \
+  --calculator.server.jar=/path/to/calculator-mcp-server.jar \
+  --scientific.server.jar=/path/to/scientific-calculator-mcp-server.jar sqrt 2
+```
+
 ## Use the server from Claude Code or Claude Desktop
 
 Any MCP host can launch the server the same way the client does. For Claude Code:
@@ -165,6 +208,11 @@ For Claude Desktop, add to `claude_desktop_config.json`:
   through `CalculatorClient`. The server module builds first, so its jar exists by the time
   this test runs. When the client module is built on its own and the jar is missing, the test
   is skipped.
+- `CalculatorRouterEndToEndTest` launches both server jars and checks that every operation is
+  routed to the right server with the right parameter names, calls operations on each server,
+  and checks the error cases: unknown operation, wrong operand count, server errors, and the
+  same tool name offered by two servers.
+- The `ScientificCalculatorMCP` tests are described in [its README](ScientificCalculatorMCP/README.md).
 
 ## How it works
 
