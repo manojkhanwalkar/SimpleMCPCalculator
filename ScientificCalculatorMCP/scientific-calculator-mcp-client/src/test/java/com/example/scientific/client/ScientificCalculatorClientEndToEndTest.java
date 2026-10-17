@@ -1,6 +1,8 @@
 package com.example.scientific.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.nio.file.Files;
@@ -51,8 +53,10 @@ class ScientificCalculatorClientEndToEndTest {
     @Test
     void toolsAreAnnotatedReadOnly() {
         mcp.listTools().tools().forEach(tool -> {
-            assertEquals(true, tool.annotations().readOnlyHint(), tool.name());
-            assertEquals(false, tool.annotations().destructiveHint(), tool.name());
+            assertTrue(tool.annotations().readOnlyHint(), tool.name());
+            assertFalse(tool.annotations().destructiveHint(), tool.name());
+            assertTrue(tool.annotations().idempotentHint(), tool.name());
+            assertFalse(tool.annotations().openWorldHint(), tool.name());
         });
     }
 
@@ -70,5 +74,10 @@ class ScientificCalculatorClientEndToEndTest {
         assertEquals("Error: Square root of a negative number", calculator.calculate("sqrt", -4));
         assertEquals("Error: Logarithm is only defined for x > 0", calculator.calculate("ln", 0));
         assertEquals("Error: Logarithm base must be > 0 and not 1", calculator.calculate("log", 8, 1));
+    }
+
+    @Test
+    void unknownToolComesBackAsErrorInsteadOfThrowing() {
+        assertTrue(calculator.calculate("cube_root", 8).startsWith("Error:"));
     }
 }

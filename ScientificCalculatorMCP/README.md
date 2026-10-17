@@ -97,6 +97,9 @@ java -jar scientific-calculator-mcp-client/target/scientific-calculator-mcp-clie
 java -jar scientific-calculator-mcp-client/target/scientific-calculator-mcp-client.jar log 8 1      # Error: Logarithm base must be > 0 and not 1
 ```
 
+An unknown operation, the wrong number of operands (`sqrt 4 2`, `log 8`) or a non-number
+(`sqrt NaN`) prints the usage and the server's operations, and exits with code 1.
+
 Demo output:
 
 ```

@@ -14,6 +14,7 @@ class ScientificToolsTest {
     @Test
     void squareRoot() {
         assertEquals(0, tools.sqrt(0));
+        assertEquals("0.0", Double.toString(tools.sqrt(-0.0)));
         assertEquals(1, tools.sqrt(1));
         assertEquals(12, tools.sqrt(144));
         assertEquals(1.5, tools.sqrt(2.25));

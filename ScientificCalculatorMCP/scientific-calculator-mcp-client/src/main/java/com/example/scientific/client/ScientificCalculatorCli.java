@@ -33,14 +33,22 @@ public class ScientificCalculatorCli implements ApplicationRunner, ExitCodeGener
         List<String> args = arguments.getNonOptionArgs();
         if (args.isEmpty()) {
             runDemo();
-        } else if (args.size() == 2 && isNumber(args.get(1))) {
-            print(calculator.calculate(args.get(0), Double.parseDouble(args.get(1))));
-        } else if (args.size() == 3 && isNumber(args.get(1)) && isNumber(args.get(2))) {
-            print(calculator.calculate(args.get(0), Double.parseDouble(args.get(1)), Double.parseDouble(args.get(2))));
-        } else {
+            return;
+        }
+        String operation = args.get(0);
+        List<String> operands = args.subList(1, args.size());
+        List<String> operations = calculator.listOperations();
+        // log takes x and base; every other tool takes x alone
+        int expectedOperands = operation.equals("log") ? 2 : 1;
+        if (!operations.contains(operation) || operands.size() != expectedOperands
+                || !operands.stream().allMatch(ScientificCalculatorCli::isFiniteNumber)) {
             System.err.println("Usage: java -jar scientific-calculator-mcp-client.jar [<operation> <x> | log <x> <base>]");
-            System.err.println("Operations: " + String.join(", ", calculator.listOperations()));
+            System.err.println("Operations: " + String.join(", ", operations));
             exitCode = 1;
+        } else if (expectedOperands == 1) {
+            print(calculator.calculate(operation, Double.parseDouble(operands.get(0))));
+        } else {
+            print(calculator.calculate(operation, Double.parseDouble(operands.get(0)), Double.parseDouble(operands.get(1))));
         }
     }
 
@@ -65,10 +73,10 @@ public class ScientificCalculatorCli implements ApplicationRunner, ExitCodeGener
         System.out.printf("%-5s 0       = %s%n", "ln", calculator.calculate("ln", 0));
     }
 
-    private static boolean isNumber(String s) {
+    /** NaN and Infinity parse as doubles but can't be sent as JSON numbers, so they are rejected here. */
+    private static boolean isFiniteNumber(String s) {
         try {
-            Double.parseDouble(s);
-            return true;
+            return Double.isFinite(Double.parseDouble(s));
         } catch (NumberFormatException e) {
             return false;
         }

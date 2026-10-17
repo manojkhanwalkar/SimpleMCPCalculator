@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.modelcontextprotocol.client.McpSyncClient;
+import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
@@ -35,12 +36,17 @@ public class ScientificCalculatorClient {
     }
 
     /**
-     * Returns the server's text result, or {@code "Error: <message>"} if the tool reported an error.
-     * Spring AI repeats the exception message on several lines in error results, so only the
-     * first line is kept.
+     * Returns the server's text result, or {@code "Error: <message>"} if the tool reported an error
+     * or the server rejected the request (e.g. an unknown tool name). Spring AI repeats the
+     * exception message on several lines in error results, so only the first line is kept.
      */
     private String call(String operation, Map<String, Object> arguments) {
-        CallToolResult result = client.callTool(new CallToolRequest(operation, arguments));
+        CallToolResult result;
+        try {
+            result = client.callTool(new CallToolRequest(operation, arguments));
+        } catch (McpError e) {
+            return "Error: " + e.getMessage();
+        }
         String text = result.content().stream()
                 .filter(TextContent.class::isInstance)
                 .map(c -> ((TextContent) c).text())

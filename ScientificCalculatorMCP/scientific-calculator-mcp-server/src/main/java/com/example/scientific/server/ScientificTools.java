@@ -19,7 +19,8 @@ public class ScientificTools {
         if (x < 0) {
             throw new IllegalArgumentException("Square root of a negative number");
         }
-        return requireFinite(Math.sqrt(x));
+        // Adding 0.0 turns Math.sqrt(-0.0) = -0.0 into 0.0
+        return requireFinite(Math.sqrt(x) + 0.0);
     }
 
     @McpTool(name = "ln", description = "Natural logarithm (base e) of x. Fails unless x > 0",
