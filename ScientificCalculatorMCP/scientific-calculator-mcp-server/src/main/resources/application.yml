@@ -1,0 +1,24 @@
+# Stdout is the MCP channel: no banner, no console logging, no web server.
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        name: scientific-calculator-mcp-server
+        version: 1.0.0
+        stdio: true
+        type: sync
+        # Only tools are offered; don't advertise empty prompt/resource/completion capabilities.
+        capabilities:
+          prompt: false
+          resource: false
+          completion: false
+        instructions: "Scientific calculator tools: sqrt (square root), ln (natural log), log10, and log (logarithm of x in any base)."
+
+logging:
+  threshold:
+    console: off
+  file:
+    name: ${java.io.tmpdir}/scientific-calculator-mcp-server.log

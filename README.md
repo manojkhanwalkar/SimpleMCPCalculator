@@ -16,6 +16,7 @@ calculator-mcp-client ──(MCP over stdin/stdout)──> calculator-mcp-server
 |--------------------------|-----------------------------------------------------------------------------|
 | `calculator-mcp-server/` | Spring Boot MCP server; `CalculatorTools` holds the nine `@McpTool` methods |
 | `calculator-mcp-client/` | Spring Boot MCP client; starts the server jar and calls its tools from the command line |
+| [`ScientificCalculatorMCP/`](ScientificCalculatorMCP/README.md) | Separate server + client pair for square roots and logarithms (`sqrt`, `ln`, `log10`, `log`), built on its own with `./mvnw` in that directory |
 
 Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.1 (MCP Java SDK 2.0).
 
