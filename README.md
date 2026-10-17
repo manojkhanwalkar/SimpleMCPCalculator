@@ -1,5 +1,7 @@
 # SimpleMCPCalculator
 
+[![CI](https://github.com/manojkhanwalkar/SimpleMCPCalculator/actions/workflows/ci.yml/badge.svg)](https://github.com/manojkhanwalkar/SimpleMCPCalculator/actions/workflows/ci.yml)
+
 A minimal [MCP](https://modelcontextprotocol.io) server and client, both Spring Boot apps built
 on [Spring AI's MCP starters](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html).
 The server exposes a calculator as MCP tools; the client launches the server and talks to it over
@@ -32,7 +34,7 @@ Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.1 (MCP Java SDK 2.0).
 - **Java 25 or newer** (`java -version`)
 - Nothing else. The Maven wrapper (`./mvnw`) downloads Maven on its first run.
 
-All commands below are run from this `SimpleMCPCalculator/` directory.
+All commands below are run from the repository root.
 
 ## 1. Build
 
