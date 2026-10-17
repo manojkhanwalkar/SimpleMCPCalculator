@@ -30,12 +30,9 @@ jobs:
           java-version: '25'
           cache: maven
 
-      # verify builds the server jar first, then runs the client's end-to-end test against it
+      # verify builds both server jars (including ScientificCalculatorMCP) before the client and
+      # router end-to-end tests run against them
       - name: Build and test
-        run: ./mvnw -B -ntp verify
-
-      - name: Build and test ScientificCalculatorMCP
-        working-directory: ScientificCalculatorMCP
         run: ./mvnw -B -ntp verify
 
       - name: Upload test reports

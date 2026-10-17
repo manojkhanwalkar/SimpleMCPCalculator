@@ -1,0 +1,34 @@
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      client:
+        name: calculator-router-client
+        type: sync
+        # Only MCP is used here; don't turn the servers' tools into Spring AI ChatClient callbacks.
+        toolcallback:
+          enabled: false
+        # No client-side handlers (sampling, elicitation, ...) to scan for.
+        annotation-scanner:
+          enabled: false
+        # One connection per server; CalculatorRouter learns which tools each one offers.
+        stdio:
+          connections:
+            calculator:
+              command: java
+              args:
+                - -jar
+                # Override with --calculator.server.jar=/path/to/calculator-mcp-server.jar
+                - ${calculator.server.jar:calculator-mcp-server/target/calculator-mcp-server.jar}
+            scientific:
+              command: java
+              args:
+                - -jar
+                # Override with --scientific.server.jar=/path/to/scientific-calculator-mcp-server.jar
+                - ${scientific.server.jar:ScientificCalculatorMCP/scientific-calculator-mcp-server/target/scientific-calculator-mcp-server.jar}
+
+logging:
+  level:
+    root: warn
