@@ -2,15 +2,21 @@
 
 [![CI](https://github.com/manojkhanwalkar/SimpleMCPCalculator/actions/workflows/ci.yml/badge.svg)](https://github.com/manojkhanwalkar/SimpleMCPCalculator/actions/workflows/ci.yml)
 
-A minimal [MCP](https://modelcontextprotocol.io) server and client, both Spring Boot apps built
+Minimal [MCP](https://modelcontextprotocol.io) servers and clients, all Spring Boot apps built
 on [Spring AI's MCP starters](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html).
-The server exposes a calculator as MCP tools; the client launches the server and talks to it over
-**stdio** (JSON-RPC on the server's stdin/stdout).
+The servers expose calculators as MCP tools; each client launches the server(s) it needs and talks
+to them over **stdio** (JSON-RPC on the server's stdin/stdout).
 
 ```
 calculator-mcp-client ──(MCP over stdin/stdout)──> calculator-mcp-server
   (spring-ai-starter-mcp-client)                     (spring-ai-starter-mcp-server, @McpTool methods)
+
+                          ┌──(stdio)──> calculator-mcp-server
+calculator-router-client ─┤
+                          └──(stdio)──> scientific-calculator-mcp-server   (ScientificCalculatorMCP/)
 ```
+
+To call every operation from one place, use the [router client](#router-client).
 
 | Module                   | What it is                                                                  |
 |--------------------------|-----------------------------------------------------------------------------|
@@ -139,36 +145,92 @@ java -jar /path/to/calculator-mcp-client.jar --calculator.server.jar=/path/to/ca
 
 ## Router client
 
-`calculator-router-client` launches **both** servers (two stdio connections in its
-`application.yml`) and calls whichever one offers the requested operation:
+`calculator-router-client` is one command line for all 13 operations. It launches **both**
+servers (two stdio connections in its `application.yml`) and sends each operation to whichever
+server offers it. You never start either server yourself.
 
-```
-                          ┌──(stdio)──> calculator-mcp-server             add, subtract, ..., parity
-calculator-router-client ─┤
-                          └──(stdio)──> scientific-calculator-mcp-server  sqrt, ln, log10, log
-```
+| Operations | Parameters | Routed to |
+|---|---|---|
+| `add`, `subtract`, `multiply`, `divide`, `remainder`, `exponent` | `a`, `b` | `calculator-mcp-server` |
+| `factorial`, `isPrime`, `parity` | `n` | `calculator-mcp-server` |
+| `sqrt`, `ln`, `log10` | `x` | `scientific-calculator-mcp-server` |
+| `log` | `x`, `base` | `scientific-calculator-mcp-server` |
 
-At startup `CalculatorRouter` asks each server for its tools (`tools/list`) and builds a routing
-table from tool name to server, along with each tool's parameter names in order. Nothing about
-the tools is hard-coded, so a tool added to either server is routable with no client change. If
-both servers ever offer the same tool name, the client refuses to start rather than guess.
+### Run it
+
+Build first (`./mvnw package` from the repository root builds both servers and the router), then:
 
 ```bash
-# List every operation with its parameters and server, then run a demo against both servers
-java -jar calculator-router-client/target/calculator-router-client.jar
-
-# <operation> <operand>...  (operands fill the tool's parameters in order)
-java -jar calculator-router-client/target/calculator-router-client.jar add 7 5        # 12.0  (calculator-mcp-server)
-java -jar calculator-router-client/target/calculator-router-client.jar isPrime 97     # true  (calculator-mcp-server)
-java -jar calculator-router-client/target/calculator-router-client.jar log 1000 10    # 3.0   (scientific-calculator-mcp-server)
-
-# Errors print "Error: ..." and exit with code 1
-java -jar calculator-router-client/target/calculator-router-client.jar log 8          # Error: log takes 2 operand(s): x, base
-java -jar calculator-router-client/target/calculator-router-client.jar cube_root 8    # Error: Unknown operation: cube_root
-java -jar calculator-router-client/target/calculator-router-client.jar divide 1 0     # Error: Division by zero
+java -jar calculator-router-client/target/calculator-router-client.jar <operation> <operand>...
 ```
 
-Both server jars are found relative to the repository root. From elsewhere, pass both paths:
+The operands fill the tool's parameters in the order shown above, so `log 1024 2` means
+`x = 1024`, `base = 2`. Each call starts both servers, which takes a few seconds.
+
+```bash
+# Calculator server
+java -jar calculator-router-client/target/calculator-router-client.jar add 7 5        # 12.0
+java -jar calculator-router-client/target/calculator-router-client.jar exponent 2 10  # 1024.0
+java -jar calculator-router-client/target/calculator-router-client.jar factorial 5    # 120
+java -jar calculator-router-client/target/calculator-router-client.jar isPrime 97     # true
+java -jar calculator-router-client/target/calculator-router-client.jar parity 42      # even
+
+# Scientific calculator server
+java -jar calculator-router-client/target/calculator-router-client.jar sqrt 144       # 12.0
+java -jar calculator-router-client/target/calculator-router-client.jar ln 10          # 2.302585092994046
+java -jar calculator-router-client/target/calculator-router-client.jar log10 1000     # 3.0
+java -jar calculator-router-client/target/calculator-router-client.jar log 1024 2     # 10.0
+```
+
+### Demo and operation list
+
+With no arguments, the router lists every operation it found (with its parameters and server)
+and then calls a few on each server:
+
+```bash
+java -jar calculator-router-client/target/calculator-router-client.jar
+```
+
+```
+Operations:
+  add        a, b         -> calculator-mcp-server
+  divide     a, b         -> calculator-mcp-server
+  exponent   a, b         -> calculator-mcp-server
+  factorial  n            -> calculator-mcp-server
+  isPrime    n            -> calculator-mcp-server
+  ln         x            -> scientific-calculator-mcp-server
+  log        x, base      -> scientific-calculator-mcp-server
+  log10      x            -> scientific-calculator-mcp-server
+  multiply   a, b         -> calculator-mcp-server
+  parity     n            -> calculator-mcp-server
+  remainder  a, b         -> calculator-mcp-server
+  sqrt       x            -> scientific-calculator-mcp-server
+  subtract   a, b         -> calculator-mcp-server
+
+add        [17.0, 5.0]   = 22.0
+factorial  [5.0]         = 120
+parity     [17.0]        = odd
+sqrt       [144.0]       = 12.0
+log        [1024.0, 2.0] = 10.0
+divide     [1.0, 0.0]    = Error: Division by zero
+cube_root  [8.0]         = Error: Unknown operation: cube_root
+```
+
+### Errors and exit codes
+
+On success the result goes to stdout and the exit code is 0. Every failure exits with code 1:
+
+| Input | Output |
+|---|---|
+| `divide 1 0`, `sqrt -4`, `factorial 2.5` | The server's error, e.g. `Error: Division by zero` |
+| `log 8` (wrong operand count) | `Error: log takes 2 operand(s): x, base` (checked before calling a server) |
+| `cube_root 8` (no server offers it) | `Error: Unknown operation: cube_root` |
+| `sqrt NaN`, `add 1 abc` (not a finite number) | Usage line and operation list, on stderr |
+
+### Run it from another directory
+
+The router looks for both server jars relative to the current directory, so the commands above
+work from the repository root. From anywhere else, pass both paths:
 
 ```bash
 java -jar /path/to/calculator-router-client.jar \
@@ -176,12 +238,33 @@ java -jar /path/to/calculator-router-client.jar \
   --scientific.server.jar=/path/to/scientific-calculator-mcp-server.jar sqrt 2
 ```
 
-## Use the server from Claude Code or Claude Desktop
+### Add another server
 
-Any MCP host can launch the server the same way the client does. For Claude Code:
+The router has no list of operations built in. At startup it asks each server for its tools
+(`tools/list`) and routes by tool name. To route to a third MCP server, add a connection under
+`spring.ai.mcp.client.stdio.connections` in
+`calculator-router-client/src/main/resources/application.yml`:
+
+```yaml
+            statistics:
+              command: java
+              args:
+                - -jar
+                - ${statistics.server.jar:path/to/statistics-mcp-server.jar}
+```
+
+Its tools appear in the operation list on the next run. Each server's tool names must be unique:
+if two servers offer a tool with the same name, the router refuses to start and names both servers.
+
+## Use the servers from Claude Code or Claude Desktop
+
+Any MCP host can launch the servers the same way the clients do. An MCP host does its own
+routing: register both servers, and it sees all 13 tools and picks the right server for each
+call. The router client isn't needed there. For Claude Code:
 
 ```bash
 claude mcp add calculator -- java -jar "$(pwd)/calculator-mcp-server/target/calculator-mcp-server.jar"
+claude mcp add scientific-calculator -- java -jar "$(pwd)/ScientificCalculatorMCP/scientific-calculator-mcp-server/target/scientific-calculator-mcp-server.jar"
 ```
 
 For Claude Desktop, add to `claude_desktop_config.json`:
@@ -192,6 +275,10 @@ For Claude Desktop, add to `claude_desktop_config.json`:
     "calculator": {
       "command": "java",
       "args": ["-jar", "/absolute/path/to/calculator-mcp-server.jar"]
+    },
+    "scientific-calculator": {
+      "command": "java",
+      "args": ["-jar", "/absolute/path/to/scientific-calculator-mcp-server.jar"]
     }
   }
 }
@@ -225,3 +312,9 @@ For Claude Desktop, add to `claude_desktop_config.json`:
   configured stdio connection. `CalculatorCli` (an `ApplicationRunner`) wraps it in
   `CalculatorClient`, which sends `tools/call` requests, and then exits, which closes the
   connection and stops the server process.
+- **Router client**: the same starter, with two stdio connections, gives `CalculatorRouterCli`
+  two `McpSyncClient`s. `CalculatorRouter` calls `tools/list` on each and maps every tool name
+  to its client. It also reads each tool's parameter names, in order, from the `required` list
+  of the input schema. A call such as `log 1024 2` becomes
+  `tools/call {name: "log", arguments: {x: 1024, base: 2}}` on the scientific server. On exit
+  both connections close, which stops both server processes.
