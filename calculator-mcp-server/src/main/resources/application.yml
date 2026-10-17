@@ -15,7 +15,7 @@ spring:
           prompt: false
           resource: false
           completion: false
-        instructions: "Calculator tools: add, subtract, multiply, divide and remainder on two numbers."
+        instructions: "Calculator tools: add, subtract, multiply, divide, remainder and exponent on two numbers (a, b); factorial, isPrime and parity (even/odd) on one whole number (n)."
 
 logging:
   threshold:
