@@ -70,6 +70,11 @@ class CalculatorClientEndToEndTest {
     }
 
     @Test
+    void overflowComesBackAsToolError() {
+        assertEquals("Error: Result is too large", calculator.calculate("exponent", 10, 400));
+    }
+
+    @Test
     void fractionalInputToWholeNumberToolComesBackAsToolError() {
         assertEquals(true, calculator.calculate("factorial", 2.5).startsWith("Error:"));
         assertEquals(true, calculator.calculate("parity", 1.5).startsWith("Error:"));

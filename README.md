@@ -36,6 +36,8 @@ Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.1 (MCP Java SDK 2.0).
 The one-operand tools take a whole number: a fraction such as `7.5` (or anything beyond 2^53,
 where a JSON number can't be exact) comes back as an error result rather than being truncated.
 `factorial` stops at 20 because `21!` no longer fits in a 64-bit integer.
+Any tool whose result would overflow or be undefined (e.g. `exponent 10 400`, `exponent -8 0.5`)
+returns an error result instead of `Infinity` or `NaN`.
 
 ## Prerequisites
 

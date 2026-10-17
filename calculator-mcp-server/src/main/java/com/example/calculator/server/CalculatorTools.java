@@ -20,26 +20,26 @@ public class CalculatorTools {
     @McpTool(name = "add", description = "Add two numbers: a + b")
     public double add(@McpToolParam(description = "First operand") double a,
                       @McpToolParam(description = "Second operand") double b) {
-        return a + b;
+        return requireFinite(a + b);
     }
 
     @McpTool(name = "subtract", description = "Subtract the second number from the first: a - b")
     public double subtract(@McpToolParam(description = "Number to subtract from") double a,
                            @McpToolParam(description = "Number to subtract") double b) {
-        return a - b;
+        return requireFinite(a - b);
     }
 
     @McpTool(name = "multiply", description = "Multiply two numbers: a * b")
     public double multiply(@McpToolParam(description = "First factor") double a,
                            @McpToolParam(description = "Second factor") double b) {
-        return a * b;
+        return requireFinite(a * b);
     }
 
     @McpTool(name = "divide", description = "Divide the first number by the second: a / b. Fails if b is 0")
     public double divide(@McpToolParam(description = "Dividend") double a,
                          @McpToolParam(description = "Divisor (must not be 0)") double b) {
         requireNonZero(b);
-        return a / b;
+        return requireFinite(a / b);
     }
 
     @McpTool(name = "remainder", description = "Remainder of dividing the first number by the second: a % b. Fails if b is 0")
@@ -49,10 +49,10 @@ public class CalculatorTools {
         return a % b;
     }
 
-    @McpTool(name = "exponent", description = "Raise the first number to the power of the second: a ^ b")
+    @McpTool(name = "exponent", description = "Raise the first number to the power of the second: a ^ b. Fails if the result is not a finite number")
     public double exponent(@McpToolParam(description = "Base") double a,
                            @McpToolParam(description = "Exponent") double b) {
-        return Math.pow(a, b);
+        return requireFinite(Math.pow(a, b));
     }
 
     @McpTool(name = "factorial", description = "Factorial of a whole number: n!. Fails unless 0 <= n <= " + MAX_FACTORIAL)
@@ -88,6 +88,17 @@ public class CalculatorTools {
     @McpTool(name = "parity", description = "Whether a whole number is even or odd. Returns \"even\" or \"odd\"")
     public String parity(@McpToolParam(description = "Whole number to test") double n) {
         return requireWholeNumber(n) % 2 == 0 ? "even" : "odd";
+    }
+
+    /**
+     * Overflow (e.g. 10 ^ 400) and undefined results (e.g. -8 ^ 0.5) would otherwise reach the
+     * client as "Infinity" or "NaN" in a successful result.
+     */
+    private static double requireFinite(double result) {
+        if (!Double.isFinite(result)) {
+            throw new ArithmeticException(Double.isNaN(result) ? "Result is undefined" : "Result is too large");
+        }
+        return result;
     }
 
     private static void requireNonZero(double divisor) {

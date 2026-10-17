@@ -42,6 +42,16 @@ class CalculatorToolsTest {
     }
 
     @Test
+    void nonFiniteResultsAreRejected() {
+        assertThrows(ArithmeticException.class, () -> tools.exponent(10, 400));
+        assertThrows(ArithmeticException.class, () -> tools.exponent(-8, 0.5));
+        assertThrows(ArithmeticException.class, () -> tools.exponent(0, -1));
+        assertThrows(ArithmeticException.class, () -> tools.multiply(1e308, 10));
+        assertThrows(ArithmeticException.class, () -> tools.divide(1e308, 1e-10));
+        assertThrows(ArithmeticException.class, () -> tools.add(Double.MAX_VALUE, Double.MAX_VALUE));
+    }
+
+    @Test
     void factorial() {
         assertEquals(1, tools.factorial(0));
         assertEquals(1, tools.factorial(1));
