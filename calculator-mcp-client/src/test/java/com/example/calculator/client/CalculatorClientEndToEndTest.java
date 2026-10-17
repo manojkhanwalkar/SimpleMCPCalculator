@@ -44,7 +44,8 @@ class CalculatorClientEndToEndTest {
 
     @Test
     void serverAdvertisesAllOperations() {
-        assertEquals(java.util.Set.of("add", "subtract", "multiply", "divide", "remainder"),
+        assertEquals(java.util.Set.of("add", "subtract", "multiply", "divide", "remainder",
+                        "exponent", "factorial", "isPrime", "parity"),
                 java.util.Set.copyOf(calculator.listOperations()));
     }
 
@@ -55,10 +56,27 @@ class CalculatorClientEndToEndTest {
         assertEquals("85.0", calculator.calculate("multiply", 17, 5));
         assertEquals("3.4", calculator.calculate("divide", 17, 5));
         assertEquals("2.0", calculator.calculate("remainder", 17, 5));
+        assertEquals("1024.0", calculator.calculate("exponent", 2, 10));
+        assertEquals("120", calculator.calculate("factorial", 5));
+        assertEquals("true", calculator.calculate("isPrime", 17));
+        assertEquals("false", calculator.calculate("isPrime", 15));
+        assertEquals("odd", calculator.calculate("parity", 17));
+        assertEquals("even", calculator.calculate("parity", 42));
     }
 
     @Test
     void divisionByZeroComesBackAsToolError() {
         assertEquals(true, calculator.calculate("divide", 1, 0).startsWith("Error:"));
+    }
+
+    @Test
+    void overflowComesBackAsToolError() {
+        assertEquals("Error: Result is too large", calculator.calculate("exponent", 10, 400));
+    }
+
+    @Test
+    void fractionalInputToWholeNumberToolComesBackAsToolError() {
+        assertEquals(true, calculator.calculate("factorial", 2.5).startsWith("Error:"));
+        assertEquals(true, calculator.calculate("parity", 1.5).startsWith("Error:"));
     }
 }

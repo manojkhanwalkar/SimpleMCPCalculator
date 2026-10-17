@@ -14,7 +14,7 @@ calculator-mcp-client ──(MCP over stdin/stdout)──> calculator-mcp-server
 
 | Module                   | What it is                                                                  |
 |--------------------------|-----------------------------------------------------------------------------|
-| `calculator-mcp-server/` | Spring Boot MCP server; `CalculatorTools` holds the five `@McpTool` methods |
+| `calculator-mcp-server/` | Spring Boot MCP server; `CalculatorTools` holds the nine `@McpTool` methods |
 | `calculator-mcp-client/` | Spring Boot MCP client; starts the server jar and calls its tools from the command line |
 
 Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.1 (MCP Java SDK 2.0).
@@ -28,6 +28,16 @@ Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.1 (MCP Java SDK 2.0).
 | `multiply`  | `a`, `b`           | `a * b`                                       |
 | `divide`    | `a`, `b`           | `a / b`; error result if `b` is 0             |
 | `remainder` | `a`, `b`           | `a % b`; error result if `b` is 0             |
+| `exponent`  | `a`, `b`           | `a` raised to the power `b`                   |
+| `factorial` | `n` (whole number) | `n!`; error result unless `0 <= n <= 20`      |
+| `isPrime`   | `n` (whole number) | `true` or `false`                             |
+| `parity`    | `n` (whole number) | `even` or `odd`                               |
+
+The one-operand tools take a whole number: a fraction such as `7.5` (or anything beyond 2^53,
+where a JSON number can't be exact) comes back as an error result rather than being truncated.
+`factorial` stops at 20 because `21!` no longer fits in a 64-bit integer.
+Any tool whose result would overflow or be undefined (e.g. `exponent 10 400`, `exponent -8 0.5`)
+returns an error result instead of `Infinity` or `NaN`.
 
 ## Prerequisites
 
@@ -88,19 +98,31 @@ java -jar calculator-mcp-client/target/calculator-mcp-client.jar subtract 7 5   
 java -jar calculator-mcp-client/target/calculator-mcp-client.jar multiply 6 7     # 42.0
 java -jar calculator-mcp-client/target/calculator-mcp-client.jar divide 10 4      # 2.5
 java -jar calculator-mcp-client/target/calculator-mcp-client.jar remainder 10 3   # 1.0
+java -jar calculator-mcp-client/target/calculator-mcp-client.jar exponent 2 10    # 1024.0
 java -jar calculator-mcp-client/target/calculator-mcp-client.jar divide 1 0       # Error: Division by zero (exit code 1)
+
+# Call a one-operand tool: <operation> <n>
+java -jar calculator-mcp-client/target/calculator-mcp-client.jar factorial 5      # 120
+java -jar calculator-mcp-client/target/calculator-mcp-client.jar isPrime 97       # true
+java -jar calculator-mcp-client/target/calculator-mcp-client.jar parity 42        # even
+java -jar calculator-mcp-client/target/calculator-mcp-client.jar parity 7.5       # Error: Not a whole number: 7.5 (exit code 1)
 ```
 
 Demo output:
 
 ```
-Tools offered by the server: add, divide, multiply, remainder, subtract
+Tools offered by the server: add, divide, exponent, factorial, isPrime, multiply, parity, remainder, subtract
 add       17, 5 = 22.0
 subtract  17, 5 = 12.0
 multiply  17, 5 = 85.0
 divide    17, 5 = 3.4
 remainder 17, 5 = 2.0
+exponent  17, 5 = 1419857.0
 divide    1, 0  = Error: Division by zero
+factorial 17    = 355687428096000
+isPrime   17    = true
+parity    17    = odd
+factorial 2.5   = Error: Not a whole number: 2.5
 ```
 
 The client finds the server jar at `calculator-mcp-server/target/calculator-mcp-server.jar`,
@@ -137,7 +159,7 @@ For Claude Desktop, add to `claude_desktop_config.json`:
 ./mvnw verify
 ```
 
-- `CalculatorToolsTest` unit-tests the arithmetic and the division-by-zero checks.
+- `CalculatorToolsTest` unit-tests every tool, including the division-by-zero and whole-number checks.
 - `CalculatorClientEndToEndTest` launches the real server jar over stdio and calls every tool
   through `CalculatorClient`. The server module builds first, so its jar exists by the time
   this test runs. When the client module is built on its own and the jar is missing, the test

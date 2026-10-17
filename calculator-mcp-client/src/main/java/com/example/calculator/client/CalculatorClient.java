@@ -31,7 +31,16 @@ public class CalculatorClient {
      * first line is kept.
      */
     public String calculate(String operation, double a, double b) {
-        CallToolResult result = client.callTool(new CallToolRequest(operation, Map.of("a", a, "b", b)));
+        return call(operation, Map.of("a", a, "b", b));
+    }
+
+    /** Calls a one-operand tool ({@code factorial}, {@code isPrime}, {@code parity}) with argument {@code n}. */
+    public String calculate(String operation, double n) {
+        return call(operation, Map.of("n", n));
+    }
+
+    private String call(String operation, Map<String, Object> arguments) {
+        CallToolResult result = client.callTool(new CallToolRequest(operation, arguments));
         String text = result.content().stream()
                 .filter(TextContent.class::isInstance)
                 .map(c -> ((TextContent) c).text())
