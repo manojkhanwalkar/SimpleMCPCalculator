@@ -79,4 +79,9 @@ class CalculatorClientEndToEndTest {
         assertEquals(true, calculator.calculate("factorial", 2.5).startsWith("Error:"));
         assertEquals(true, calculator.calculate("parity", 1.5).startsWith("Error:"));
     }
+
+    @Test
+    void unknownOperationComesBackAsErrorInsteadOfException() {
+        assertEquals(true, calculator.calculate("cube_root", 8).startsWith("Error:"));
+    }
 }

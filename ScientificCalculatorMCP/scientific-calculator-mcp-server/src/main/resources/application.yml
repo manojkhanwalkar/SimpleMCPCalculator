@@ -20,5 +20,7 @@ spring:
 logging:
   threshold:
     console: off
+  # Per-user directory rather than the shared temp dir, where another local user could
+  # pre-create or read the file. Override with --logging.file.name=...
   file:
-    name: ${java.io.tmpdir}/scientific-calculator-mcp-server.log
+    name: ${user.home}/.calculator-mcp/scientific-calculator-mcp-server.log
