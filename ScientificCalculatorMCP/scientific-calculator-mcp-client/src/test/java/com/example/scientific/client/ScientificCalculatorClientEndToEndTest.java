@@ -32,7 +32,9 @@ class ScientificCalculatorClientEndToEndTest {
     @BeforeAll
     static void startServer() {
         assumeTrue(Files.exists(SERVER_JAR), "server jar not built: " + SERVER_JAR.toAbsolutePath());
-        ServerParameters params = ServerParameters.builder("java").args("-jar", SERVER_JAR.toString()).build();
+        ServerParameters params = ServerParameters.builder("java").args("-jar", SERVER_JAR.toString(),
+                // Keep test logs in target/ rather than the developer's home directory.
+                "--logging.file.name=target/" + SERVER_JAR.getFileName() + ".log").build();
         mcp = McpClient.sync(new StdioClientTransport(params, McpJsonDefaults.getMapper())).build();
         mcp.initialize();
         calculator = new ScientificCalculatorClient(mcp);

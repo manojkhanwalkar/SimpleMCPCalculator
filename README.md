@@ -91,7 +91,7 @@ few seconds to start):
 ```
 
 Press `Ctrl+D` to stop it. Because stdout is the protocol channel, the server's logs go to a file
-instead: `${java.io.tmpdir}/calculator-mcp-server.log` (usually `/tmp/calculator-mcp-server.log`).
+instead: `${user.home}/.calculator-mcp/calculator-mcp-server.log` (override with `--logging.file.name=<path>`).
 
 ## 3. Use the client
 

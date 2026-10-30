@@ -1,0 +1,15 @@
+# Keeps the SHA-pinned GitHub Actions in ci.yml (and Maven dependencies) up to date.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: maven
+    directory: /ScientificCalculatorMCP
+    schedule:
+      interval: weekly
