@@ -8,7 +8,6 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
@@ -78,13 +77,18 @@ public class CalculatorRouter {
         CallToolResult result;
         try {
             result = route.client().callTool(new CallToolRequest(operation, arguments));
-        } catch (McpError e) {
-            return "Error: " + e.getMessage();
+        } catch (RuntimeException e) {
+            // McpError (e.g. unknown tool) and transport failures/timeouts alike become an error string.
+            return "Error: " + firstLine(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
         }
         String text = result.content().stream()
                 .filter(TextContent.class::isInstance)
                 .map(c -> ((TextContent) c).text())
                 .collect(Collectors.joining("\n"));
-        return Boolean.TRUE.equals(result.isError()) ? "Error: " + text.lines().findFirst().orElse("") : text;
+        return Boolean.TRUE.equals(result.isError()) ? "Error: " + firstLine(text) : text;
+    }
+
+    private static String firstLine(String text) {
+        return text.lines().findFirst().orElse("");
     }
 }

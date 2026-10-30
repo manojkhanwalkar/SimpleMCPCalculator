@@ -43,7 +43,9 @@ class CalculatorRouterEndToEndTest {
     }
 
     private static McpSyncClient start(Path jar) {
-        ServerParameters params = ServerParameters.builder("java").args("-jar", jar.toString()).build();
+        ServerParameters params = ServerParameters.builder("java").args("-jar", jar.toString(),
+                // Keep test logs in target/ rather than the developer's home directory.
+                "--logging.file.name=target/" + jar.getFileName() + ".log").build();
         McpSyncClient client = McpClient.sync(new StdioClientTransport(params, McpJsonDefaults.getMapper())).build();
         client.initialize();
         return client;

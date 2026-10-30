@@ -21,6 +21,8 @@ logging:
   threshold:
     console: off
   # Per-user directory rather than the shared temp dir, where another local user could
-  # pre-create or read the file. Override with --logging.file.name=...
+  # pre-create or read the file. The application's main() creates it owner-only (0700/0600)
+  # and falls back to a private temp dir if the home directory is not writable.
+  # Override with --logging.file.name=...
   file:
     name: ${user.home}/.calculator-mcp/calculator-mcp-server.log
