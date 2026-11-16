@@ -46,7 +46,9 @@ public class CalculatorTools {
     public double remainder(@McpToolParam(description = "Dividend") double a,
                             @McpToolParam(description = "Divisor (must not be 0)") double b) {
         requireNonZero(b);
-        return a % b;
+        // Infinity % b is NaN. MCP SDK 2.1 rejects non-finite input in its schema check, but 2.0.x passed
+        // 1e400 through as Infinity, so the tool checks its own result.
+        return requireFinite(a % b);
     }
 
     @McpTool(name = "exponent", description = "Raise the first number to the power of the second: a ^ b. Fails if the result is not a finite number")

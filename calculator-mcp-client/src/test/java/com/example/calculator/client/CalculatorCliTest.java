@@ -108,7 +108,8 @@ class CalculatorCliTest {
     @Test
     void badUsagePrintsHelpAndExitsWithOne() {
         for (String[] args : List.of(new String[] {"add", "seven", "5"}, new String[] {"add", "7", "five"}, new String[] {"add"},
-                new String[] {"add", "1", "2", "3"}, new String[] {"factorial", "x"})) {
+                new String[] {"add", "1", "2", "3"}, new String[] {"factorial", "x"}, new String[] {"add", "NaN", "1"},
+                new String[] {"add", "1", "Infinity"}, new String[] {"factorial", "1e400"})) {
             err.reset();
             CalculatorCli cli = run(args);
 
