@@ -25,7 +25,7 @@ To call every operation from one place, use the [router client](#router-client).
 | [`ScientificCalculatorMCP/`](ScientificCalculatorMCP/README.md) | Separate server + client pair for square roots and logarithms (`sqrt`, `ln`, `log10`, `log`); built by the root `./mvnw`, or on its own with `./mvnw` in that directory |
 | `calculator-router-client/` | Spring Boot MCP client connected to **both** servers; sends each operation to the server that offers it (see [Router client](#router-client)) |
 
-Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.1 (MCP Java SDK 2.0).
+Versions: Java 25+, Spring Boot 4.1, Spring AI 2.0.2 (MCP Java SDK 2.0).
 
 ## Tools
 
@@ -291,6 +291,11 @@ For Claude Desktop, add to `claude_desktop_config.json`:
 ```
 
 - `CalculatorToolsTest` unit-tests every tool, including the division-by-zero and whole-number checks.
+- `PrivateLogFileTest` checks that the server log goes to an owner-only `~/.calculator-mcp/`
+  file, falls back to a private temp directory, and leaves an explicit `logging.file.name` alone.
+- `CalculatorClientTest`, `CalculatorCliTest`, `CalculatorRouterTest` and `CalculatorRouterCliTest`
+  unit-test the clients and their command lines against mocked MCP servers (error texts, exit
+  codes, usage messages, the demo).
 - `CalculatorClientEndToEndTest` launches the real server jar over stdio and calls every tool
   through `CalculatorClient`. The server module builds first, so its jar exists by the time
   this test runs. When the client module is built on its own and the jar is missing, the test
@@ -300,6 +305,29 @@ For Claude Desktop, add to `claude_desktop_config.json`:
   and checks the error cases: unknown operation, wrong operand count, server errors, and the
   same tool name offered by two servers.
 - The `ScientificCalculatorMCP` tests are described in [its README](ScientificCalculatorMCP/README.md).
+
+### Coverage
+
+`./mvnw verify` also measures unit-test coverage with JaCoCo and fails if any module drops below
+**95% of lines or branches** (`coverage.line.minimum` / `coverage.branch.minimum` in the parent
+poms). Each module's HTML report is in `target/site/jacoco/index.html`; CI shows a per-module
+table in the job summary and keeps the reports as the `coverage-reports` artifact.
+
+Not counted: the `*Application` classes, which only hold `main()` (start Spring Boot, and
+`System.exit` for the clients). The end-to-end tests run the servers as separate processes,
+which JaCoCo does not instrument, so server code is covered by its unit tests alone.
+
+## Releases
+
+Pushing a version tag publishes a GitHub Release with the five executable jars and a
+`SHA256SUMS` file:
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+The `Release` workflow builds and tests with a read-only token; only its final publish step may
+write to the repository. Check a download with `sha256sum -c SHA256SUMS`.
 
 ## How it works
 

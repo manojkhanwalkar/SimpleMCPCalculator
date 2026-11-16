@@ -34,6 +34,10 @@
     <properties>
         <java.version>25</java.version>
         <spring-ai.version>2.0.2</spring-ai.version>
+        <jacoco.version>0.8.16</jacoco.version>
+        <!-- Coverage gate per module (JaCoCo check in the verify phase); rule 7 target is 95% -->
+        <coverage.line.minimum>0.95</coverage.line.minimum>
+        <coverage.branch.minimum>0.95</coverage.branch.minimum>
     </properties>
 
     <dependencyManagement>
@@ -61,5 +65,62 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!-- Unit-test coverage: report per module (target/site/jacoco) and fail the build below the gate -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <!-- The *Application classes only hold main(): start Spring Boot (and System.exit
+                         for the clients). They run in the end-to-end tests' server subprocesses,
+                         which JaCoCo does not instrument. -->
+                    <excludes>
+                        <exclude>**/*Application.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${coverage.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${coverage.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 </project>

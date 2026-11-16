@@ -150,11 +150,17 @@ It can be registered alongside the basic `calculator` server; the tool names don
 ```
 
 - `ScientificToolsTest` unit-tests every tool, including its input checks and exact powers in `log`.
+- `PrivateLogFileTest` checks the owner-only log file location and its fallbacks.
+- `ScientificCalculatorClientTest` and `ScientificCalculatorCliTest` unit-test the client and its
+  command line against a mocked MCP server.
 - `ScientificCalculatorClientEndToEndTest` launches the real server jar over stdio, checks the
   advertised tools and their read-only annotations, and calls every tool through
   `ScientificCalculatorClient`, including error cases. The server module builds first, so its jar
   exists by the time this test runs. When the client module is built on its own and the jar is
   missing, the test is skipped.
+
+The build fails if JaCoCo line or branch coverage of either module drops below 95% (see
+`coverage.*.minimum` in `pom.xml`); reports are in each module's `target/site/jacoco/`.
 
 ## How it works
 
