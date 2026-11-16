@@ -33,9 +33,9 @@ public class CalculatorCli implements ApplicationRunner, ExitCodeGenerator {
         List<String> args = arguments.getNonOptionArgs();
         if (args.isEmpty()) {
             runDemo();
-        } else if (args.size() == 3 && isNumber(args.get(1)) && isNumber(args.get(2))) {
+        } else if (args.size() == 3 && isFiniteNumber(args.get(1)) && isFiniteNumber(args.get(2))) {
             print(calculator.calculate(args.get(0), Double.parseDouble(args.get(1)), Double.parseDouble(args.get(2))));
-        } else if (args.size() == 2 && isNumber(args.get(1))) {
+        } else if (args.size() == 2 && isFiniteNumber(args.get(1))) {
             print(calculator.calculate(args.get(0), Double.parseDouble(args.get(1))));
         } else {
             System.err.println("Usage: java -jar calculator-mcp-client.jar [<operation> <a> <b> | <operation> <n>]");
@@ -66,10 +66,13 @@ public class CalculatorCli implements ApplicationRunner, ExitCodeGenerator {
         System.out.printf("%-9s 2.5   = %s%n", "factorial", calculator.calculate("factorial", 2.5));
     }
 
-    private static boolean isNumber(String s) {
+    /**
+     * NaN and Infinity (and values such as 1e400 that overflow to it) parse as doubles but can't be
+     * sent as JSON numbers, so they are rejected here, as the scientific and router clients do.
+     */
+    private static boolean isFiniteNumber(String s) {
         try {
-            Double.parseDouble(s);
-            return true;
+            return Double.isFinite(Double.parseDouble(s));
         } catch (NumberFormatException e) {
             return false;
         }

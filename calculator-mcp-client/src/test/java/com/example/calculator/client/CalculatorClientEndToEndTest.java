@@ -1,10 +1,12 @@
 package com.example.calculator.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.nio.file.Files;
 import java.time.Duration;
+import java.util.Set;
 import java.nio.file.Path;
 
 import io.modelcontextprotocol.client.McpClient;
@@ -51,9 +53,9 @@ class CalculatorClientEndToEndTest {
 
     @Test
     void serverAdvertisesAllOperations() {
-        assertEquals(java.util.Set.of("add", "subtract", "multiply", "divide", "remainder",
+        assertEquals(Set.of("add", "subtract", "multiply", "divide", "remainder",
                         "exponent", "factorial", "isPrime", "parity"),
-                java.util.Set.copyOf(calculator.listOperations()));
+                Set.copyOf(calculator.listOperations()));
     }
 
     @Test
@@ -73,7 +75,7 @@ class CalculatorClientEndToEndTest {
 
     @Test
     void divisionByZeroComesBackAsToolError() {
-        assertEquals(true, calculator.calculate("divide", 1, 0).startsWith("Error:"));
+        assertTrue(calculator.calculate("divide", 1, 0).startsWith("Error:"));
     }
 
     @Test
@@ -83,12 +85,12 @@ class CalculatorClientEndToEndTest {
 
     @Test
     void fractionalInputToWholeNumberToolComesBackAsToolError() {
-        assertEquals(true, calculator.calculate("factorial", 2.5).startsWith("Error:"));
-        assertEquals(true, calculator.calculate("parity", 1.5).startsWith("Error:"));
+        assertTrue(calculator.calculate("factorial", 2.5).startsWith("Error:"));
+        assertTrue(calculator.calculate("parity", 1.5).startsWith("Error:"));
     }
 
     @Test
     void unknownOperationComesBackAsErrorInsteadOfException() {
-        assertEquals(true, calculator.calculate("cube_root", 8).startsWith("Error:"));
+        assertTrue(calculator.calculate("cube_root", 8).startsWith("Error:"));
     }
 }

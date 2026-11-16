@@ -49,6 +49,8 @@ class CalculatorToolsTest {
         assertThrows(ArithmeticException.class, () -> tools.multiply(1e308, 10));
         assertThrows(ArithmeticException.class, () -> tools.divide(1e308, 1e-10));
         assertThrows(ArithmeticException.class, () -> tools.add(Double.MAX_VALUE, Double.MAX_VALUE));
+        assertThrows(ArithmeticException.class, () -> tools.remainder(Double.POSITIVE_INFINITY, 3));
+        assertThrows(ArithmeticException.class, () -> tools.remainder(Double.NaN, 3));
     }
 
     @Test
