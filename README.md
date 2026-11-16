@@ -120,7 +120,7 @@ java -jar calculator-mcp-client/target/calculator-mcp-client.jar parity 7.5     
 ```
 
 An operand that is not a finite number (`add NaN 1`, `add 1 abc`, `factorial 1e400`) prints the
-usage line and the server's operations on stderr and exits with code 1, without calling the server.
+usage line and the server's operations on stderr and exits with code 1, without calling the tool.
 
 Demo output:
 

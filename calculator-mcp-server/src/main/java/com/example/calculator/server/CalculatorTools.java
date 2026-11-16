@@ -46,7 +46,8 @@ public class CalculatorTools {
     public double remainder(@McpToolParam(description = "Dividend") double a,
                             @McpToolParam(description = "Divisor (must not be 0)") double b) {
         requireNonZero(b);
-        // Infinity % b is NaN; the JSON schema check already rejects non-finite input, this keeps the tool safe on its own.
+        // Infinity % b is NaN. MCP SDK 2.1 rejects non-finite input in its schema check, but 2.0.x passed
+        // 1e400 through as Infinity, so the tool checks its own result.
         return requireFinite(a % b);
     }
 
