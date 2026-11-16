@@ -31,9 +31,27 @@ jobs:
           cache: maven
 
       # verify builds both server jars (including ScientificCalculatorMCP) before the client and
-      # router end-to-end tests run against them
-      - name: Build and test
+      # router end-to-end tests run against them, and fails if a module's JaCoCo line or branch
+      # coverage drops below the gate in the parent poms (coverage.*.minimum)
+      - name: Build, test and check coverage
         run: ./mvnw -B -ntp verify
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Unit-test coverage (JaCoCo)"
+            .github/scripts/coverage-summary.sh
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: coverage-reports
+          path: '**/target/site/jacoco/'
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload test reports
         if: failure()

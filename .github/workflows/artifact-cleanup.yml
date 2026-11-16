@@ -11,7 +11,7 @@ name: Artifact cleanup
 
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: [CI, Dependency review, Release]
     types: [completed]
   workflow_dispatch:
 

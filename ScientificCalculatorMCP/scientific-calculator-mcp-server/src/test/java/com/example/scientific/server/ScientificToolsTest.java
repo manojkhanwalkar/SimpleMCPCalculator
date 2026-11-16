@@ -60,6 +60,12 @@ class ScientificToolsTest {
     }
 
     @Test
+    void nearlyExactPowerIsNotRoundedWhenItIsNotExact() {
+        double x = Math.nextUp(1000.0);
+        assertEquals(Math.log(x) / Math.log(10), tools.log(x, 10));
+    }
+
+    @Test
     void logarithmOfNonPositiveIsRejected() {
         assertThrows(IllegalArgumentException.class, () -> tools.ln(0));
         assertThrows(IllegalArgumentException.class, () -> tools.ln(-5));

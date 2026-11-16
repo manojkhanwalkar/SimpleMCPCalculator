@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.nio.file.Files;
+import java.time.Duration;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -24,6 +25,8 @@ import org.junit.jupiter.api.Test;
  * repository root, where both servers are packaged first; skipped if either jar hasn't been built.
  */
 class CalculatorRouterEndToEndTest {
+
+    private static final Duration STARTUP_TIMEOUT = Duration.ofSeconds(60);
 
     private static final Path CALCULATOR_JAR = Path.of("../calculator-mcp-server/target/calculator-mcp-server.jar");
     private static final Path SCIENTIFIC_JAR = Path.of(
@@ -46,7 +49,9 @@ class CalculatorRouterEndToEndTest {
         ServerParameters params = ServerParameters.builder("java").args("-jar", jar.toString(),
                 // Keep test logs in target/ rather than the developer's home directory.
                 "--logging.file.name=target/" + jar.getFileName() + ".log").build();
-        McpSyncClient client = McpClient.sync(new StdioClientTransport(params, McpJsonDefaults.getMapper())).build();
+        McpSyncClient client = McpClient.sync(new StdioClientTransport(params, McpJsonDefaults.getMapper()))
+                // A cold JVM on a busy CI runner can take longer than the 20 s default to start.
+                .initializationTimeout(STARTUP_TIMEOUT).requestTimeout(STARTUP_TIMEOUT).build();
         client.initialize();
         return client;
     }
