@@ -1,5 +1,6 @@
 # Publishes a GitHub Release with the five executable jars when a version tag (v*) is pushed:
 #   git tag v1.0.0 && git push origin v1.0.0
+# Only a tag on a commit that is already on master (so went through a reviewed PR) is released.
 # The build job runs with a read-only token; only the small publish job, which runs no project
 # code, can write to the repository.
 name: Release
@@ -24,6 +25,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Require the tagged commit to be on master
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+            echo "::error::Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on master; not releasing."
+            exit 1
+          fi
 
       - name: Set up Java 25
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0

@@ -26,4 +26,5 @@ arithmetic functions with no file, network or shell access. Relevant issues are 
 - a tool input that crashes or hangs a server, or returns a wrong result as a success,
 - anything written to stdout other than MCP messages (it would corrupt the protocol),
 - log files readable by other local users (logs go to an owner-only `~/.calculator-mcp/`),
-- vulnerable dependencies (Dependabot, dependency review and CodeQL run on every pull request).
+- vulnerable dependencies (Dependabot watches them; dependency review and CodeQL run on every
+  pull request).
